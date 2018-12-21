@@ -16,12 +16,16 @@
 <script>
 import echarts from 'echarts'
 import dataCreate from './dataCreate'
-import getOption from './getOption'
 
-const data = [];
-for (let i = 0; i < 1000; i++) {
-    data.push(dataCreate());
-}
+let fd = new Date('2016/12/18 06:38:00');
+const oneMinute = 60 * 1000;
+
+const data = [
+	// {name:'2016/12/18 06:38:08', value:['2016/12/18 06:38:08', 80]},
+    // {name:'2016/12/18 16:18:18', value:['2016/12/18 16:18:18', 60]},
+    // {name:'2016/12/18 19:18:18', value:['2016/12/18 19:18:18', 90]}
+];
+
 
 export default {
 	data() {
@@ -32,21 +36,70 @@ export default {
 	},
 	mounted() {
 		const chart = this.chart = echarts.init(document.getElementById('chart'));
-		const option = getOption(data);
+
+		for(let i = 0; i < 10; i++) {
+			data.push(this.getItemData());
+		}
+		const option = this.getOption(data);
         chart.setOption(option);
 
-        setInterval(function () {
-            for (let i = 0; i < 5; i++) {
-                data.shift();
-                data.push(dataCreate());
-            }
+        setInterval(() => {
+            data.shift();
+            data.push(this.getItemData());
 
             chart.setOption({
                 series: [{
                     data: data
                 }]
             });
-        }, 1000 * 2);
+        }, 1000 * 10);
+	},
+	methods: {
+		getOption(data) {
+			return {
+		        title: {
+		            text: '实时访问情况'
+		        },
+		        tooltip: {
+		            trigger: 'axis',
+		            formatter: function (params) {
+		                params = params[0];
+		                var date = new Date(params.name);
+		                return date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate() + '  ' + date.getHours() + ':' + date.getMinutes() + ' : ' + params.value[1];
+		            },
+		            axisPointer: {
+		                animation: false
+		            }
+		        },
+		        xAxis: {
+		            type: 'time',
+		            splitLine: {
+		                show: false
+		            }
+		        },
+		        yAxis: {
+		            type: 'value',
+		            boundaryGap: [0, '100%'],
+		            splitLine: {
+		                show: false
+		            }
+		        },
+		        series: [{
+		            name: '模拟数据',
+		            type: 'line',
+		            showSymbol: false,
+		            hoverAnimation: false,
+		            data: data
+		        }]
+		    }
+		},
+		getItemData() {
+			fd = new Date(+fd + oneMinute);
+			return {
+				name: fd,
+				value: [fd, parseInt(Math.random() * 10 + 10)]
+			}
+		}
 	}
 }
 </script>
